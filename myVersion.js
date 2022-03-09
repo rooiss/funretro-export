@@ -3,7 +3,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 // adding format as an option to CLI arg
-const [url, file, format] = process.argv.slice(2);
+const [url, file, format] = process.argv.slice(3);
 
 if (!url) {
   throw 'Please provide a URL as the first argument.';
@@ -27,10 +27,9 @@ async function run() {
     throw 'Board title does not exist. Please check if provided URL is correct.';
   }
 
-  let parsedText = `# ${boardTitle}\n\n`;
+  let resArr = [];
 
-  let csvArr = [];
-
+  // get all columns
   const columns = await page.$$('.easy-card-list');
 
   for (let col = 0; col < columns.length; col++) {
@@ -38,24 +37,24 @@ async function run() {
       '.column-header > h2',
       getInnerText
     );
-    // for csv rows
 
-    const messages = await columns[col].$$('.column > li');
-    if (messages.length) {
-      parsedText += `## ${columnTitle}\n`;
+    // get all cards
+    const card = await columns[col].$$('.column > li');
+    if (card.length) {
       col === columns.length - 1
-        ? csvArr.push(`${columnTitle}`)
-        : csvArr.push(`${columnTitle},`);
-      console.log(csvArr);
+        ? resArr.push(`${columnTitle}`)
+        : resArr.push(`${columnTitle},`);
+      // console.log(resArr);
     }
-    console.log(col);
-    for (let i = 0; i < messages.length; i++) {
-      const messageText = await messages[i].$eval(
+    // console.log(col);
+    console.log(card);
+    for (let i = 0; i < card.length; i++) {
+      const messageText = await card[i].$eval(
         '.easy-card-body .text',
         getInnerText
       );
       console.log(messageText, i);
-      const votesCount = await messages[
+      const votesCount = await card[
         i
       ].$eval('.easy-card-votes-container span.easy-badge-votes', (node) =>
         node.innerText.trim()
@@ -66,37 +65,24 @@ async function run() {
       let commentsCount = 0;
 
       try {
-        commentsCount = await messages[i].$eval(
+        commentsCount = await card[i].$eval(
           '[aria-label="New comment"] .easy-badge-votes',
           getInnerText
         );
       } catch {
         // TODO: Review comments selector
       }
-      if (Number(commentsCount) > 0) {
-        await messages[i].$eval('[aria-label="New comment"]', (node) =>
-          node.click()
-        );
-        const comments = await messages[i].$$('.comment');
-        if (comments.length) {
-          for (let i = 0; i < comments.length; i++) {
-            const commentText = await comments[i].$eval(
-              '.comment .text',
-              getInnerText
-            );
-            parsedText += `\t- ${commentText}\n`;
-          }
-        }
-      }
     }
 
-    if (messages.length) {
+    if (card.length) {
       parsedText += '\n';
     }
   }
 
   return parsedText;
 }
+
+function parseFormat(format) {}
 
 function writeToFile(filePath, data) {
   const datetime = new Date();
