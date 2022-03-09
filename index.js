@@ -1,6 +1,5 @@
-const fs = require('fs');
-const path = require('path');
 const { chromium } = require('playwright');
+const { writeToFile } = require('./writeToFile');
 
 // adding format as an option to CLI arg
 const [url, file, format] = process.argv.slice(2);
@@ -29,7 +28,7 @@ async function run() {
 
   let parsedText = `# ${boardTitle}\n\n`;
 
-  let csvArr = [];
+  const resArr = [];
 
   const columns = await page.$$('.easy-card-list');
 
@@ -38,25 +37,20 @@ async function run() {
       '.column-header > h2',
       getInnerText
     );
-    // for csv rows
 
     const messages = await columns[col].$$('.column > li');
     if (messages.length) {
       parsedText += `## ${columnTitle}\n`;
-      col === columns.length - 1
-        ? csvArr.push(`${columnTitle}`)
-        : csvArr.push(`${columnTitle},`);
-      console.log(csvArr);
     }
-    console.log(col);
-    for (let i = 0; i < messages.length; i++) {
-      const messageText = await messages[i].$eval(
+    console.log('column', col);
+    for (let row = 0; row < messages.length; row++) {
+      const messageText = await messages[row].$eval(
         '.easy-card-body .text',
         getInnerText
       );
-      console.log(messageText, i);
+      console.log(messageText, 'row', row);
       const votesCount = await messages[
-        i
+        row
       ].$eval('.easy-card-votes-container span.easy-badge-votes', (node) =>
         node.innerText.trim()
       );
@@ -66,7 +60,7 @@ async function run() {
       let commentsCount = 0;
 
       try {
-        commentsCount = await messages[i].$eval(
+        commentsCount = await messages[row].$eval(
           '[aria-label="New comment"] .easy-badge-votes',
           getInnerText
         );
@@ -74,7 +68,7 @@ async function run() {
         // TODO: Review comments selector
       }
       if (Number(commentsCount) > 0) {
-        await messages[i].$eval('[aria-label="New comment"]', (node) =>
+        await messages[row].$eval('[aria-label="New comment"]', (node) =>
           node.click()
         );
         const comments = await messages[i].$$('.comment');
@@ -88,33 +82,34 @@ async function run() {
           }
         }
       }
+      resArr.push({ messageText, votesCount, commentsCount, col, row });
     }
-
     if (messages.length) {
       parsedText += '\n';
     }
   }
 
+  console.log(resArr);
   return parsedText;
 }
 
-function writeToFile(filePath, data) {
-  const datetime = new Date();
-  const resolvedPath = path.resolve(
-    filePath ||
-      `../${boardTitle.replace('/', '')}-${datetime
-        .toISOString()
-        .slice(0, 10)}.csv`
-  );
-  fs.writeFile(resolvedPath, data, (error) => {
-    if (error) {
-      throw error;
-    } else {
-      console.info(`Successfully written to file at: ${resolvedPath}`);
-    }
-    process.exit();
-  });
-}
+// function writeToFile(filePath, data) {
+//   const datetime = new Date();
+//   const resolvedPath = path.resolve(
+//     filePath ||
+//       `../${boardTitle.replace('/', '')}-${datetime
+//         .toISOString()
+//         .slice(0, 10)}.csv`
+//   );
+//   fs.writeFile(resolvedPath, data, (error) => {
+//     if (error) {
+//       throw error;
+//     } else {
+//       console.info(`Successfully written to file at: ${resolvedPath}`);
+//     }
+//     process.exit();
+//   });
+// }
 
 function handleError(error) {
   console.error(error);

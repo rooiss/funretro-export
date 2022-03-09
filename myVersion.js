@@ -40,14 +40,7 @@ async function run() {
 
     // get all cards
     const card = await columns[col].$$('.column > li');
-    if (card.length) {
-      col === columns.length - 1
-        ? resArr.push(`${columnTitle}`)
-        : resArr.push(`${columnTitle},`);
-      // console.log(resArr);
-    }
-    // console.log(col);
-    console.log(card);
+
     for (let i = 0; i < card.length; i++) {
       const messageText = await card[i].$eval(
         '.easy-card-body .text',
@@ -72,8 +65,23 @@ async function run() {
       } catch {
         // TODO: Review comments selector
       }
+      if (Number(commentsCount) > 0) {
+        await messages[row].$eval('[aria-label="New comment"]', (node) =>
+          node.click()
+        );
+        const comments = await messages[i].$$('.comment');
+        if (comments.length) {
+          for (let i = 0; i < comments.length; i++) {
+            const commentText = await comments[i].$eval(
+              '.comment .text',
+              getInnerText
+            );
+            parsedText += `\t- ${commentText}\n`;
+          }
+        }
+      }
     }
-
+    resArr.push({ messageText, votesCount, commentsCount, col, row });
     if (card.length) {
       parsedText += '\n';
     }
