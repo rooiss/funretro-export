@@ -1,5 +1,5 @@
 const HEADERS = ['list', 'text', 'votes'];
-module.exports.formatCsv = function (lists) {
+module.exports.formatCsv = function ({ lists }) {
   const csv = [];
   csv.push(HEADERS);
   lists.forEach((list) => {

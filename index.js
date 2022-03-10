@@ -32,12 +32,13 @@ async function run() {
   }
 
   // get the 3 lists
-  const lists = await page.$$('.easy-card-list');
+  const listElements = await page.$$('.easy-card-list');
 
   // extract data from DOM
-  const cardContent = await getCardContent(lists);
+  const lists = await getCardContent(listElements);
+  const boardData = { boardTitle, lists };
 
-  return format(formatOption, cardContent);
+  return format(formatOption, boardData);
 }
 
 function handleError(error) {
