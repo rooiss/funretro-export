@@ -5,11 +5,17 @@ const { getInnerText } = require('./getInnerText');
 const { writeToFile } = require('./writeToFile');
 
 const DEFAULT_FORMAT = 'csv';
+const ACCEPTED_FORMATS = ['csv', 'markdown'];
 
 // extract CLI args
 const [url, file, _formatOption] = process.argv.slice(2);
-
 const formatOption = _formatOption ? _formatOption.trim() : DEFAULT_FORMAT;
+
+if (!ACCEPTED_FORMATS.includes(formatOption)) {
+  handleError(
+    `Invalid format specified. Accepted formats: ${ACCEPTED_FORMATS.join(',')}`
+  );
+}
 
 if (!url) {
   handleError('Please provide a URL as the first argument.');
@@ -38,7 +44,10 @@ async function run() {
   const lists = await getCardContent(listElements);
   const boardData = { boardTitle, lists };
 
-  return format(formatOption, boardData);
+  return {
+    content: format(formatOption, boardData),
+    boardTitle,
+  };
 }
 
 function handleError(error) {
@@ -47,6 +56,6 @@ function handleError(error) {
 
 run()
   .then((data) => {
-    writeToFile(file, data);
+    writeToFile(file, data, formatOption);
   })
   .catch(handleError);

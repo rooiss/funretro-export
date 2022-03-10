@@ -11,18 +11,3 @@ module.exports.formatCsv = function ({ lists }) {
   });
   return csv.map((row) => row.join(',')).join('\n');
 };
-
-// const findMaxRows = (cardsArr) => {
-//   let max = 0;
-//   for (let i = 0; i < cardsArr.length; i++) {
-//     max = Math.max(cardsArr[i].cards.length, max);
-//   }
-//   return max;
-// };
-
-// const insertRows = (csv, rowMax) => {
-//   for (let i = 0; i < rowMax; i++) {
-//     csv.push([]);
-//   }
-//   return csv;
-// };

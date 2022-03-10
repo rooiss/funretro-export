@@ -1,15 +1,22 @@
 const path = require('path');
 const fs = require('fs');
 
-module.exports.writeToFile = function (filePath, data) {
-  const datetime = new Date();
+module.exports.writeToFile = function (
+  filePath,
+  { boardTitle, content },
+  formatOption
+) {
+  let extension;
+  if (formatOption === 'markdown') {
+    extension = 'txt';
+  } else if (formatOption === 'csv') {
+    extension = 'csv';
+  }
   const resolvedPath = path.resolve(
     filePath ||
-      `../${boardTitle.replace('/', '')}-${datetime
-        .toISOString()
-        .slice(0, 10)}.csv`
+      `../${boardTitle.replace(/\//g, '').replace(/\s/g, '_')}.${extension}`
   );
-  fs.writeFile(resolvedPath, data, (error) => {
+  fs.writeFile(resolvedPath, content, (error) => {
     if (error) {
       throw error;
     } else {

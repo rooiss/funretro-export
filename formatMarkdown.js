@@ -10,9 +10,7 @@ module.exports.formatMarkdown = function (boardData) {
     markdown.push('');
     // add list cards
     list.cards.forEach((card) => {
-      markdown.push(
-        `- ${card.text} ${card.votes > 0 ? `(+${card.votes})` : ''}`
-      );
+      markdown.push(`- ${card.text} ${formatVoteCount(card.votes)}`);
     });
 
     markdown.push('');
@@ -21,4 +19,4 @@ module.exports.formatMarkdown = function (boardData) {
   return markdown.join('\n');
 };
 
-// const formatVoteCount = (votes) => votes > 0 ?
+const formatVoteCount = (votes) => (votes > 0 ? `(+${votes})` : '');
