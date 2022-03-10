@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-module.exports.writeToFile = function writeToFile(filePath, data) {
+module.exports.writeToFile = function (filePath, data) {
   const datetime = new Date();
   const resolvedPath = path.resolve(
     filePath ||
