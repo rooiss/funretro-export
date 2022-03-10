@@ -4,14 +4,16 @@ const { getCardContent } = require('./getCardContent');
 const { getInnerText } = require('./getInnerText');
 const { writeToFile } = require('./writeToFile');
 
-// adding format as an option to CLI arg
-const [url, file, formatOption] = process.argv.slice(2);
+const DEFAULT_FORMAT = 'csv';
+
+// extract CLI args
+const [url, file, _formatOption] = process.argv.slice(2);
+
+const formatOption = _formatOption ? _formatOption.trim() : DEFAULT_FORMAT;
 
 if (!url) {
-  throw 'Please provide a URL as the first argument.';
+  handleError('Please provide a URL as the first argument.');
 }
-
-let boardTitle = '';
 
 async function run() {
   const browser = await chromium.launch();
@@ -21,31 +23,29 @@ async function run() {
   await page.waitForSelector('.easy-board');
   await page.waitForSelector('.board-name');
 
-  boardTitle = await page.$eval('.board-name', getInnerText);
+  const boardTitle = await page.$eval('.board-name', getInnerText);
 
   if (!boardTitle) {
-    throw 'Board title does not exist. Please check if provided URL is correct.';
+    handleError(
+      'Board title does not exist. Please check if provided URL is correct.'
+    );
   }
 
-  // iterate through each lane, create a laneMeta object for each
-  // const lanes = await getLaneMetas(columns)
+  // get the 3 lists
+  const lists = await page.$$('.easy-card-list');
 
-  const columns = await page.$$('.easy-card-list');
+  // extract data from DOM
+  const cardContent = await getCardContent(lists);
 
-  const cardsArr = await getCardContent(columns);
-  format('csv', cardsArr);
-
-  // console.log(cardsArr);
-  // return the data
+  return format(formatOption, cardContent);
 }
 
 function handleError(error) {
-  console.error(error);
+  throw new Error(error);
 }
 
 run()
   .then((data) => {
-    // writeToFile(file, data)
-    console.log('something');
+    writeToFile(file, data);
   })
   .catch(handleError);

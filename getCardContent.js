@@ -1,48 +1,38 @@
 require('playwright');
 const { getInnerText } = require('./getInnerText');
 
-module.exports.getCardContent = async function (columns) {
-  const resArr = await getLaneMetas(columns);
-  // console.log(resArr);
+module.exports.getCardContent = async function (lists) {
+  const resArr = await getListData(lists);
   return resArr;
 };
 
-const getLaneMetas = async (columns) => {
+const getListData = async (lists) => {
   const result = [];
 
-  for (let col = 0; col < columns.length; col++) {
-    const laneMeta = {};
-    laneMeta.section = await getLaneTitle(columns[col]);
-    laneMeta.cards = await getLaneCards(columns[col]);
-    result.push(laneMeta);
+  for (let col = 0; col < lists.length; col++) {
+    const listData = {};
+    listData.section = await getListTitle(lists[col]);
+    listData.cards = await getListCards(lists[col]);
+    result.push(listData);
   }
   return result;
 };
 
-const getLaneCards = async (column) => {
-  const cards = await column.$$('.column > li');
-  // if (card.length) {
-  //   parsedText += `## ${columnTitle}\n`;
-  // }
-  // console.log('column', col);
+const getListCards = async (list) => {
+  const cards = await list.$$('.column > li');
   const result = [];
   for (let row = 0; row < cards.length; row++) {
     const cardMeta = {};
     cardMeta.text = await getCardText(cards[row]);
     cardMeta.votes = await getCardVotes(cards[row]);
-    // cardMeta.row = row;
-    // console.log(cardMeta);
     result.push(cardMeta);
   }
   return result;
 };
 
-const getLaneTitle = async (column) => {
-  return await column.$eval('.column-header > h2', getInnerText);
+const getListTitle = async (list) => {
+  return await list.$eval('.column-header > h2', getInnerText);
 };
-// const getLaneCard = async (column) => {
-//   return await column.$$('.column > li');
-// };
 const getCardText = async (card) => {
   return await card.$eval('.easy-card-body .text', getInnerText);
 };

@@ -1,4 +1,4 @@
-module.exports.formatMarkdown = function (cardArr) {
+module.exports.formatMarkdown = function (lists) {
   let parsedText = '';
 
   return parsedText;
